@@ -3,14 +3,11 @@ __author__ = 'Jacob McCormack'
 
 import time
 import decimal
+
 # import math
 """
 My project is a nifty calculator. Eventually it will do other things.
 """
-# TODO: (use .isalpha to figure out what are
-#  questions and what are calculator items.)
-# TODO: (Clean up code for sprint and make sure
-#  it meets all the criteria.)
 
 
 def main():
@@ -19,17 +16,25 @@ def main():
     the project is loaded directly, otherwise main must be called
     manually which is only necessary during import.
     """
-
     try:
+        print("Let me load your preferences really quick. ", end="")
         Pref.load_preferences()
+        Pref.pref["ask_new_question"] = True
+        print("There you go!")
     # try end
     except FileNotFoundError:
+        print("\nOops, looks like you don't " +
+              "have a preference file just yet.")
+        # The + on strings concatenates them.
         Pref.handle_load_error()
+        print("I generated a new one for you!")
     # except end
+    print()
 
     print("Welcome to Jacob's Calculator!")
-    # print("Type 'help' if you'd like to do some special stuff.")
-    # print("Note: exclude the quotes in 'help'.")
+    print("Type 'help' for more information.")
+    print("Type 'stop' if you'd like to exit the program.")
+    print("Note: exclude the quotes when issuing commands.")
     print()
     print("Start typing math questions below if you just want to "
           "calculate.")
@@ -59,12 +64,40 @@ def main():
         # for end
         timer.stop_timer()
     # if end
+
     while Pref.pref["ask_new_question"]:
         question = input().lower()
         # .lower() converts all the characters of a string into
         # lower cased letters.
-        Calculator(question)
+        if is_calculator_question(question):
+            Calculator(question)
+        # if end
+        else:
+            Respond(question)
+        # else end
     # while end
+
+
+# def end
+
+
+def is_calculator_question(question: str):
+    """
+    Checks if the given string is a calculator question or not.
+
+    A calculator question is any question that has at least one number.
+    :param question: String.
+    :return: Boolean.
+    """
+    for character in question:
+        if character.isnumeric():
+            # isnumeric is a variation of isalpha that returns true
+            # if the character is a number.
+            return True
+        # if end
+    # for end
+
+
 # def end
 
 
@@ -79,6 +112,7 @@ class Pref:
         "ask_new_question": True
     }
     # These are the default values.
+    pref_length = len(pref)
 
     @staticmethod
     def load_preferences():
@@ -86,46 +120,61 @@ class Pref:
         Handles the preferences.txt file.
 
         References:
-        https://www.datacamp.com/community/tutorials/reading-writing-files-python
+        https://www.datacamp.com/community/tutorials/
+        reading-writing-files-python
         https://devenum.com/how-to-convert-text-file-to-a-dictionary-in-python/
         https://codefather.tech/blog/python-with-open/
-
-        :return: None
         """
-        with open("preferences.txt", "r") as preferences:
-            # With is a context manager that automatically closes
-            # the file when it's finished with.
-            # As preferences is the same as
-            # preferences = open("file", "r")
-            line_count = 0
-            for line in preferences:
-                line = line.rstrip()
-                # rstrip() removes the extra characters.
-                key, value = line.split("=", 1)
-                # .split splits the string according to the argument
-                # given and the second argument is the number
-                # of splits.
-                # The comma is for unpacking and allows for multiple
-                # variable to be assigned at once.
+        try:
+            with open("preferences.txt", "r") as preferences:
+                # With is a context manager that automatically closes
+                # the file when it's finished with.
+                # As preferences is the same as
+                # preferences = open("file", "r")
+                line_count = 0
+                for line in preferences:
+                    print(".", end=" ")
+                    line = line.rstrip()
+                    # rstrip() removes the extra characters.
+                    key, value = line.split("=", 1)
+                    # .split splits the string according to the argument
+                    # given and the second argument is the number
+                    # of splits.
+                    # The comma is for unpacking and allows for multiple
+                    # variable to be assigned at once.
 
-                if value == "True":
-                    value = True
-                # if end
-                else:
-                    value = False
-                # else
-                # Converts the string to boolean.
+                    if value == "True":
+                        value = True
+                    # if end
+                    else:
+                        value = False
+                        # else
+                    # if end
 
-                Pref.pref[key] = value
-                # Updates the dictionary values.
-                line_count += 1
-            # for end
+                    Pref.pref[key] = value
+                    # Updates the dictionary values.
+                    line_count += 1
+                # for end
+            # with end
+        # try end
+        except ValueError:
+            # If there is a value error that means
+            # an = sign is missing from one of the lines in the file
+            print("\nUh oh, your preference file was damaged. Poor thing...\n"
+                  "Using defaults instead.")
+            Pref.handle_load_error()
+            return
+        # except end
 
         # with end
-        if line_count < len(Pref.pref):
-            # If lines are missing it rewrites the file.
+        if line_count != Pref.pref_length:
+            # If lines are missing or there are too many it rewrites the file.
+            print("\nUh oh, your preference file was damaged. Poor thing.\n"
+                  "Using defaults instead.")
             Pref.handle_load_error()
+            return
         # if end
+
     # def end
 
     @staticmethod
@@ -134,17 +183,202 @@ class Pref:
         Handles what to do if loading the file doesn't exist.
 
         References:
-        https://www.datacamp.com/community/tutorials/reading-writing-files-python
-
-        :return: None
+        https://www.datacamp.com/community/
+        tutorials/reading-writing-files-python
         """
         with open("preferences.txt", "w") as preferences:
             for key in Pref.pref:
                 preferences.write(f"{key}={Pref.pref[key]}\n")
             # for end
         # with end
+
     # def end
+
+    @staticmethod
+    def update_preference(key, value):
+        """
+        Updates the preference as defined by key to true or false.
+
+        :param key: The value to update.
+        :param value: What to update the value to. Either True or False.
+        """
+        print("Updating preference .", end=" ")
+        found_key = False
+        converted_value = SaveData.convert_from_string(value)
+
+        if type(converted_value) is bool:
+            Pref.pref[key] = converted_value
+            with open("preferences.txt", "r") as preferences:
+                preference_list = preferences.readlines()
+            # with end
+
+            for index, line in enumerate(preference_list):
+                line = line.rstrip()
+                key_in_file, value_in_file = line.split("=", 1)
+
+                if key == key_in_file:
+                    preference_list[index] = f"{key}={value}\n"
+                    found_key = True
+                    break
+                # if end
+                print(".", end=" ")
+            # for end
+
+            if found_key:
+                with open("preferences.txt", "w") as preferences:
+                    preferences.writelines(preference_list)
+                # with close
+            # if end
+            else:
+                Debug.print("Error: Preference doesn't exist!")
+            # else end
+        else:
+            Debug.print("Invalid assignment!")
+        # else end
+    # def end
+
+
 # class
+
+
+class SaveData:
+    """
+    Holds all the game save data.
+    #TODO: Actually implement.
+    """
+    save_data = {}
+
+    @staticmethod
+    def convert_from_string(value: str):
+        """
+        Attempts to convert a string to a bool, float, integer, or string.
+
+        :param value: The value to convert.
+        :return: The converted value.
+        """
+        value = str(value)
+        if value == "False":
+            value = False
+            Debug.print("Value is a Bool.")
+        # if end
+        elif value == "True":
+            value = True
+            Debug.print("Value is a bool.")
+        # elif end
+        else:
+            try:
+                value = float(value)
+                if int(value) == value:
+                    # Converts to integer if the float
+                    # is the same as the integer version.
+                    value = int(value)
+                # if end
+                Debug.print("Value is a number.")
+            # try end
+            except ValueError:
+                Debug.print("Value is a string.")
+            # except end
+        # else end
+        return value
+
+    # def end
+
+    def load_save(self):
+        """
+        Attempts to retrieve game save data.
+        """
+        try:
+            with open("save_data.txt", "r") as save:
+                for line in save:
+                    line = line.rstrip()
+                    key, value = line.split("=", 1)
+
+                    self.save_data[key] = self.convert_from_string(value)
+                # for end
+                Debug.print(f"Loaded save data:\n{self.save_data}")
+            # with end
+        # try end
+        except FileNotFoundError:
+            Debug.print("Save file doesn't exist.")
+            self.create_save()
+        # except end
+        except ValueError:
+            Debug.print("End of file.")
+        # except end
+
+    # def end
+
+    def create_save(self):
+        """
+        Used to create a new save file.
+        """
+        self.save_data = {
+            "runs": 1,
+            "asked_for_help": False
+        }
+
+        with open("save_data.txt", "w") as save:
+            for key in self.save_data:
+                save.write(f"{key}={str(self.save_data[key])}\n")
+            # for end
+            Debug.print(f"New save data:\n{self.save_data}")
+        # with end
+
+    # def end
+
+    def update_save_data(self, key, value):
+        """
+        Used to update any given key.
+
+        References:
+        https://stackoverflow.com/questions/4719438/
+        editing-specific-line-in-text-file-in-python
+
+        :param key: The key of the value to update.
+        :param value: The value to update to.
+        """
+        key = str(key).lower()
+        value = str(value).lower().capitalize()
+        self.save_data[key] = self.convert_from_string(value)
+
+        print("Saving .", end=" ")
+
+        with open("save_data.txt", "r") as save:
+            save_data = save.readlines()
+        # with end
+
+        found_line = False
+        for index, line in enumerate(save_data):
+            # Enumerate gives each element an index.
+            line = line.rstrip()
+            key_in_file, value_in_file = line.split("=", 1)
+
+            print(".", end=" ")
+            if key_in_file == str(key):
+                # Checks if the keys match.
+                found_line = True
+
+                save_data[index] = f"{key}={value}\n"
+                break
+            # if end
+        # for end
+        if found_line:
+            # If the key was found it will update it.
+            with open("save_data.txt", "w") as save:
+                save.writelines(save_data)
+            # with close
+        # if end
+        else:
+            # Otherwise it creates a new key value pair.
+            with open("save_data.txt", "a") as save:
+                save.write(f"{key}={value}")
+            # with end
+        # else end
+        print()
+    # def end
+
+
+# class end
 
 
 class Debug:
@@ -157,6 +391,7 @@ class Debug:
         self.start = None
         self.end = None
         self.use_milliseconds = None
+
     # def end
 
     @staticmethod
@@ -169,6 +404,7 @@ class Debug:
             print(text)
         # if end
         # Debug.print() << Copy and paste
+
     # def end
 
     def start_timer(self, in_milliseconds=False):
@@ -178,6 +414,7 @@ class Debug:
         """
         self.start = time.perf_counter_ns()
         self.use_milliseconds = in_milliseconds
+
     # def end
 
     def stop_timer(self):
@@ -203,6 +440,7 @@ class Debug:
         del self  # This deletes the timer to save memory.
     # def end
 
+
 # class end
 
 
@@ -211,6 +449,7 @@ class Operations:
     Where all the function operators are stored.
     Use 'Operations.function' to call it.
     """
+
     @staticmethod
     def multiply(first: float, second: float):
         """
@@ -223,6 +462,7 @@ class Operations:
         return first * second
         # * is the multiplication operator. It returns the result of
         # multiplying the first number to the second number
+
     # def end
 
     @staticmethod
@@ -237,6 +477,7 @@ class Operations:
         return first / second
         # / is the division operator. It returns the result of
         # dividing the first number by the second number.
+
     # def end
 
     @staticmethod
@@ -251,6 +492,7 @@ class Operations:
         return first % second
         # % is the modulus operator. It returns the remainder of dividing
         # the first number by the second number.
+
     # def end
 
     @staticmethod
@@ -265,6 +507,7 @@ class Operations:
         return first - second
         # - is the subtraction operator. It returns the result of
         # subtracting the second number from the first one.
+
     # def end
 
     @staticmethod
@@ -313,6 +556,8 @@ class Operations:
         # // is the floor division operator. It returns only the integer
         # part of dividing the first number by the second
         # number by rounding down.
+
+
 # class end
 
 
@@ -378,10 +623,11 @@ class Calculator:
         self.question = question_string
         self.question_list = self.parse_question()
         if self.question_list is not None:
-            Debug.print("-"*20 + "Starting Evaluation" + "-"*20)
+            Debug.print("-" * 20 + "Starting Evaluation" + "-" * 20)
             self.answer = self.evaluate_question(self.question_list)
             print(f"Answer:\n{self.answer}")
         # if end
+
     # def end
 
     @staticmethod
@@ -474,12 +720,13 @@ class Calculator:
         self.stack_precedence = self.operator_precedence
         # This updates the precedence of the stack as the operator
         # was pushed to it.
+
     # def end
 
     def clean_question(self):
         """
         This removes items defined by Calculator.ignored_chars.
-        
+
         :return: None
         """
         cleaned_question = ""
@@ -500,6 +747,7 @@ class Calculator:
             # if end
         # for end
         self.question = cleaned_question
+
     # def end
 
     def conv_spec_item_to_num(self):
@@ -519,6 +767,7 @@ class Calculator:
             print(f"Error: unknown item '{self.special_item}'")
             return "error"
         # except end
+
     # def end
 
     def parse_question(self):
@@ -705,7 +954,7 @@ class Calculator:
                 self.question_queue.append(decimal.Decimal(self.special_item))
             # try end
             except decimal.InvalidOperation:
-                print(f"Error: Unknown item '{self.special_item}'")
+                print("Error: Unknown item ", self.special_item, ".", sep="'")
                 return None
             # except end
         # if end
@@ -761,7 +1010,7 @@ class Calculator:
                 Debug.print(f"Current stack: {question_stack}")
             # if end
             elif (len(question_stack) > 1 and
-                    current_element in Calculator.emdas_operators):
+                  current_element in Calculator.emdas_operators):
                 # If there are two items to work on and the current
                 # element is an operator.
                 first_num = question_stack[-2]
@@ -784,7 +1033,7 @@ class Calculator:
             # elif end
             question.pop(0)
             # Un-enqueues the element we just worked on.
-            Debug.print("-"*10 + "Next Item" + "-"*10)
+            Debug.print("-" * 10 + "Next Item" + "-" * 10)
         # while end
         Debug.print(f"Final stack:\n{question_stack}")
         if question_stack[0] == "paren error":
@@ -794,6 +1043,84 @@ class Calculator:
         # if end
         return int(question_stack[0])
     # def end
+
+
+# class end
+
+
+class Respond:
+    """
+    This handles word responses.
+    """
+
+    sentence_separators = {
+        ".", " ", ",", "!", "?", "*", "/", "^", "@", "#", "$", "%",
+        "~", "<", ">", ":", ";", "|", "_", "-", "+", "=", "(", ")"
+    }
+
+    sentence_deletions = {
+        "'", '"', "`"
+    }
+
+    def __init__(self, question: str):
+        question = Respond.split(question)
+        Debug.print(question)
+        if "help" in question:
+            print("Type any math question and I'll answer it.\n" +
+                  "Unfortunately I don't accept variables or " +
+                  "special operators such as sin, cos, tan, etc...")
+            # + on strings concatenates them (basically it combines them
+            # into one big string)
+        # if end
+        elif "quit" in question or "stop" in question:
+            Pref.pref["ask_new_question"] = False
+            print("Aww okay :(\nI hope you have a great day!")
+            time.sleep(2)
+        # else end
+        else:
+            print("Sorry, I don't understand that command.")
+        # else end
+
+    # def end
+
+    @staticmethod
+    def split(question):
+        """
+        Splits a string according to the items in the sentence_separator set.
+
+        :param question: The question as a string.
+        :return: List.
+        """
+        question_list = [""]
+        for character in question:
+            if character not in Respond.sentence_separators:
+                if character not in Respond.sentence_deletions:
+                    question_list[-1] += character
+                    # Adds the character to the last word in the question list.
+                # if end
+            # if end
+            else:
+                if len(question_list[-1]) > 0:
+                    # Only creates a new word if there is
+                    # something in the previous word.
+                    question_list.append("")
+                # if end
+            # else end
+        # for end
+
+        if question_list[-1] == "":
+            # Deletes an empty entry if there is one.
+            question_list.pop()
+        # if end
+
+        if len(question_list) > 0:
+            return question_list
+        # if end
+        else:
+            return None
+        # else end
+
+
 # class end
 
 
