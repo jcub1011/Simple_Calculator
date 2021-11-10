@@ -6,7 +6,7 @@ I made this at a beginner level of python in my first semester of college for my
 
 ## Demonstration
 
-![Calculator in action with a help command.](giphy.gif)
+![Calculator in action with a help command.](Demonstration.gif)
 
 ## Getting Started
 
