@@ -194,12 +194,13 @@ class Calculate:
         "#": True
     }
 
-    def __init__(self, question_string):
+    def __init__(self, question_string, custom_call=False):
         """
         This is applied to any object created under the Calculator
         class automatically. Self is the object itself which is passed
         by default unless I call a staticmethod.
         :param question_string: An infix question as a string.
+        :param custom_call: Whether or not the question should be evaluated.
         """
 
         # The ': str' in 'question_string: str' defines the
@@ -212,12 +213,14 @@ class Calculate:
         # All the steps are divided into different functions for
         # readability.
         self.question = question_string
-        self.perform_question_cleanse_pass()
-        self.perform_question_separation_pass()
-        self.convert_to_postfix()
-        self.evaluate_question()
-        # print(f"The answer: {self.question}")
-        self.answer = self.question
+        if not custom_call:
+            self.perform_question_cleanse_pass()
+            self.perform_question_separation_pass()
+            self.convert_to_postfix()
+            self.evaluate_question()
+            # print(f"The answer: {self.question}")
+            self.answer = self.question
+        # if end
 
     # def end
 
@@ -243,8 +246,26 @@ class Calculate:
                 # else end
             # if end
             elif character not in self.ignored_chars:
-                cleaned_question += character
-                prev_char = character
+                if character.isalpha():
+                    if prev_char is not None:
+                        if (character not in self.emdas_operators and
+                                prev_char.isnumeric()):
+                            # Checks if the current character is a
+                            # special operator and the previous
+                            # character is a number.
+                            cleaned_question += f"*{character}"
+                        else:
+                            cleaned_question += character
+                            prev_char = character
+                        # else end
+                    else:
+                        cleaned_question += character
+                        prev_char = character
+                    # else end
+                else:
+                    cleaned_question += character
+                    prev_char = character
+                # else end
             # elif end
         # for end
 
@@ -261,12 +282,33 @@ class Calculate:
             self.question.append(item)
         # if end
         return ""
+
     # def end
 
-    def perform_question_separation_pass(self):
+    def append_number(self, number, precision):
+        """Attempts to append the number to the list."""
+
+        if len(number) > 0:
+            if precision:
+                self.question.append(decimal.Decimal(number))
+            else:
+                self.question.append(float(number))
+            # else end
+        # if end
+        return ""
+
+    # def end
+
+    def perform_question_separation_pass(self, precision=True):
         """
         Separates the question into a list of Decimals and operators.
+
+        :param precision: If True it uses the decimal module and skips
+        checking for a special operator at the end of the separation pass.
         """
+
+        # KNOWN BUG: Can't tell that "x sin" is
+        # x*sin rather than "xsin".
 
         special_operator = ""
         operator = ""
@@ -285,19 +327,16 @@ class Calculate:
             # if end
 
             elif item in self.emdas_operators:
-                if len(number) > 0:
-                    self.question.append(decimal.Decimal(number))
-                    number = ""
-                # if end
+                number = self.append_number(number, precision)
+
+                special_operator = self.append_item(special_operator)
 
                 operator = self.combine(operator, item)
             # elif end
 
             elif item.isalpha():
-                if len(number) > 0:
-                    self.question.append(decimal.Decimal(number))
-                    number = ""
-                # if end
+                number = self.append_number(number, precision)
+
                 operator = self.append_item(operator)
 
                 special_operator = self.combine(special_operator, item)
@@ -305,11 +344,10 @@ class Calculate:
 
             else:
                 # Only parentheses can reach here.
-                if len(number) > 0:
-                    self.question.append(decimal.Decimal(number))
-                    number = ""
-                # if end
+                number = self.append_number(number, precision)
+
                 operator = self.append_item(operator)
+
                 special_operator = self.append_item(special_operator)
 
                 self.question.append(item)
@@ -319,7 +357,17 @@ class Calculate:
         if number != "":
             # It didn't check for any operators because if the operator
             # doesn't have a number after it it would cause an error anyways.
-            self.question.append(decimal.Decimal(number))
+            if precision:
+                self.question.append(decimal.Decimal(number))
+            else:
+                self.question.append(float(number))
+            # else end
+        # if end
+
+        if not precision:
+            if special_operator != "":
+                self.question.append(special_operator)
+            # if end
         # if end
 
     # def end

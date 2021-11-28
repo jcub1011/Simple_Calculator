@@ -186,6 +186,20 @@ class Respond:
             print(f"Question being tested:\n{test_value}")
             print(f"Answer: {calculator.Calculate(test_value).answer}")
         # for end
+
+    # def end
+
+    @staticmethod
+    def print_secrets():
+        """
+        Prints the secrets.
+        """
+        print("Some secret commands:\n"
+              # "'play_game' to play a game.\n"
+              "'explain_bitwise_operators' to explain bitwise operators.\n"
+              "'bitwise_calculator' to use the bitwise calculator.\n"
+              "'graphing_calculator' to use the graphing calculator.")
+
     # def end
 
 
