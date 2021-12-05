@@ -141,8 +141,7 @@ class Respond:
         print("Type any math equation you can think of and I will answer "
               "it. \nUnfortunately I don't support sin, cos, tan, etc "
               "or equations with variables.\nAlso, you can type "
-              "'stop' or 'quit' to end the program.\n(shh, type secrets "
-              "for some extra commands)")
+              "'stop' or 'quit' to end the program.")
         # + on strings concatenates them (basically it combines them
         # into one big string)
 
@@ -172,13 +171,16 @@ class Respond:
             "2+10-2^(5-3)+7-2*2+6/3+5%4+5//2",  # Should equal 16
             "2+10-2^(5-3)+7-2*2+6/3",  # Should equal 13
             "30-10^(20-18+2*1)+16/(2*2)*2+10*(4+6)",  # Should equal -9862
+            "30-10^(20-18+2*1)+16/(2*2)2+10(4+6)",  # Should equal -9862
             "3+4*2/((1-5)^2^3)",  # Should equal 3.0001220703125
             "3.2+8",  # should equal 11.2
             "(     1 + 1          )) ",  # Should be error.
             "(     1 + 1           ",  # Should equal 2
-            # "1*sin(6)+6* 8 cos(5)",
+            # "1sin(6)+6* 8 cos(5)",
             "8*2",  # Should equal 16
             "-10+2",  # Should equal -8
+            "100/0",  # Should be an error.
+            "",  # Should be error.
             "-1+8 - (-1+2)-0"  # Should equal 6
         ]
         for test_value in test_values:
