@@ -16,7 +16,7 @@ Returns a string with a formatted graph in it.
 
 def main():
     """Main function."""
-    Graph("5x+2xy=3")
+    Graph("y=10/x")
 
 
 # def end
@@ -214,19 +214,12 @@ class Graph:
         :return: An implicit function.
         """
 
-        equal_count = 0
-        for character in function:
-            if character == "=":
-                equal_count += 1
-            # if end
-        # for end
-
-        if equal_count > 1:
-            print("Invalid function: Too many '='s.")
-            return None
-        # if end
-
-        first_piece, second_piece = function.split("=", 1)
+        first_piece, second_piece = function.split("=")
+        try:
+            pass
+        except ValueError:
+            raise ValueError("There must be only one '='.")
+        # except end
 
         return second_piece + f"-({first_piece})"
 
@@ -387,6 +380,10 @@ class Graph:
 
         first_value = Graph.plug_into_function(function, points[0], indices)
         midpoint_value = Graph.plug_into_function(function, midpoint, indices)
+
+        if first_value is None or midpoint_value is None:
+            return midpoint
+        # if end
 
         if midpoint_value == 0 or max_iterations < 1:
             return midpoint
@@ -609,13 +606,19 @@ class Graph:
         :return: Result of plugging in.
         """
 
-        for index in indexes[0]:
-            function[index] = x_y_values[0]
-        # for end
+        try:
+            for index in indexes[0]:
+                function[index] = x_y_values[0]
+            # for end
 
-        for index in indexes[1]:
-            function[index] = x_y_values[1]
-        # for end
+            for index in indexes[1]:
+                function[index] = x_y_values[1]
+            # for end
+
+        except decimal.DivisionByZero:
+            return None
+
+        # except end
 
         return calculator.Calculate.evaluate_question(function)
 
