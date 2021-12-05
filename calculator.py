@@ -433,7 +433,7 @@ class Calculate:
         :return: Bool
         """
 
-        if char == "=":
+        if char == "=" or char == ".":
             return False
 
         elif ((char is not None) and (not char.isnumeric()) and

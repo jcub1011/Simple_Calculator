@@ -39,7 +39,7 @@ def main():
 
     print("Welcome to Jacob's Calculator!")
     print("Put '=' in a function to graph a "
-          "function. Otherwise, write normal math questions to use"
+          "function. Otherwise, write normal math questions to use "
           "the regular calculator.")
     print("Type 'help' for more information.")
     print("Type 'stop' if you'd like to exit the program.")
